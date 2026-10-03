@@ -28,6 +28,7 @@ export function createStore(S, dict) {
   if (!featured.length) featured = catalog.filter((p) => p.available).slice(0, 5);
   const hasHero = !!(byId(S.sections, 'hero') || { visible: true }).visible && S.hero.visible && featured.length > 0;
   const nav = S.nav.filter((n) => n.visible);
+  const contactShown = !!(byId(S.sections, 'contact') || { visible: true }).visible;
 
   /* ---------- derived product text ---------- */
   const hairLabel = (p) => !p.hair.length ? '' : p.hair.includes('all') ? t('allHair') : p.hair.map((h) => (byId(S.hairTypes, h) || { name: h }).name).join('، ');
@@ -121,7 +122,7 @@ export function createStore(S, dict) {
     contact() {
       const so = socialsHTML();
       if (!wa && !so) return '';
-      return '<section class="sec" id="contact"><div class="contact"><h2>' + esc(S.copy.contactTitle) + '</h2><p>' + esc(S.copy.contactText) + '</p>' + (wa ? '<a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/' + wa + '">' + IC.whatsapp + 'محادثة على واتساب</a>' : '') + so + '</div></section>';
+      return '<section class="sec" id="contact"><div class="contact"><h2>' + esc(S.copy.contactTitle) + '</h2><p>' + esc(S.copy.contactText) + '</p><div class="links">' + (wa ? '<a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/' + wa + '">' + IC.whatsapp + 'محادثة على واتساب</a>' : '') + so + '</div></div></section>';
     }
   };
 
@@ -133,7 +134,7 @@ export function createStore(S, dict) {
       '<main>' + S.sections.map((s) => s.visible && sections[s.id] ? sections[s.id]() : '').join('') + '</main></div>' +
       '<footer><div class="cols"><div>' + brandHTML + '<p class="about">' + esc(S.footer.about) + '</p></div>' +
       '<div><h4>المتجر</h4><ul>' + nav.map((n) => '<li><a href="' + esc(n.target) + '">' + esc(n.label) + '</a></li>').join('') + '</ul></div>' +
-      '<div><h4>تواصل</h4><ul>' + (set.email ? '<li><a class="ltr" href="mailto:' + esc(set.email) + '">' + esc(set.email) + '</a></li>' : '') + (set.orderNote ? '<li>' + esc(set.orderNote) + '</li>' : '') + '</ul>' + socialsHTML(true) + '</div></div>' +
+      '<div><h4>الطلب والدفع</h4><ul>' + (set.email ? '<li><a class="ltr" href="mailto:' + esc(set.email) + '">' + esc(set.email) + '</a></li>' : '') + (set.orderNote ? '<li>' + esc(set.orderNote) + '</li>' : '') + '</ul>' + (contactShown ? '' : socialsHTML(true)) + '</div></div>' +
       '<div class="legal"><span>' + esc(S.footer.creditLabel) + ' ' + esc(S.footer.designerName) + '</span><span>' + esc(S.footer.rights) + ' © <span class="ltr">' + new Date().getFullYear() + '</span> <a class="ltr" href="' + esc(S.footer.creditUrl) + '" target="_blank" rel="noopener">' + esc(S.footer.creditName) + '</a></span></div></footer>' +
       '<button class="dock" id="dock" aria-label="فتح السلة"><span class="pile" id="pile"></span><span class="lbl" id="docklbl"></span><span class="go">عرض السلة</span></button>' +
       '<div class="scrim" id="scrim"></div><aside class="sheet" id="cart" role="dialog" aria-modal="true" aria-label="السلة وإتمام الطلب"></aside><aside class="sheet pdsheet" id="pd" role="dialog" aria-modal="true" aria-label="تفاصيل المنتج"></aside>' +

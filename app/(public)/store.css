@@ -191,6 +191,8 @@ ul{margin:0;padding:0}
 /* contact + footer */
 .contact{background:var(--ink);color:#fbeef7;border-radius:var(--r-l);padding:clamp(26px,6vw,64px);display:grid;gap:18px;justify-items:start}
 .contact p{opacity:.82;max-width:32em}
+.contact .links{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.contact .links .socials a{min-height:52px;min-width:52px}
 .socials{display:flex;gap:10px;flex-wrap:wrap}
 .socials a{display:inline-flex;align-items:center;gap:.5em;min-height:46px;min-width:46px;justify-content:center;padding:0 12px;border-radius:999px;box-shadow:inset 0 0 0 1.5px currentColor;color:inherit;text-decoration:none;font-weight:600;font-size:.9rem;opacity:.9}
 .socials a svg{width:20px;height:20px}
