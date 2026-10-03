@@ -77,9 +77,10 @@ export function createStore(S, dict) {
       list: (mine || []).map((r) => card(r, true)).join('') + ok.map((r) => card(r, false)).join('') || '<p class="empty">لا توجد تقييمات بعد. كوني أول من يشارك تجربته.</p>'
     };
   }
-  function socialsHTML() {
+  function socialsHTML(withWa) {
     const s = S.socials.filter((x) => x.visible && x.url);
-    return s.length ? '<div class="socials">' + s.map((x) => { const known = IC[x.platform] && x.platform !== 'link'; return '<a href="' + esc(x.url) + '" target="_blank" rel="noopener" aria-label="' + esc(x.label) + '">' + (IC[x.platform] || IC.link) + (known ? '' : '<span>' + esc(x.label) + '</span>') + '</a>'; }).join('') + '</div>' : '';
+    const waLink = withWa && wa ? '<a href="https://wa.me/' + wa + '" target="_blank" rel="noopener" aria-label="واتساب">' + IC.whatsapp + '</a>' : '';
+    return s.length || waLink ? '<div class="socials">' + waLink + s.map((x) => { const known = IC[x.platform] && x.platform !== 'link'; return '<a href="' + esc(x.url) + '" target="_blank" rel="noopener" aria-label="' + esc(x.label) + '">' + (IC[x.platform] || IC.link) + (known ? '' : '<span>' + esc(x.label) + '</span>') + '</a>'; }).join('') + '</div>' : '';
   }
   const sections = {
     hero() {
@@ -132,8 +133,8 @@ export function createStore(S, dict) {
       '<main>' + S.sections.map((s) => s.visible && sections[s.id] ? sections[s.id]() : '').join('') + '</main></div>' +
       '<footer><div class="cols"><div>' + brandHTML + '<p class="about">' + esc(S.footer.about) + '</p></div>' +
       '<div><h4>المتجر</h4><ul>' + nav.map((n) => '<li><a href="' + esc(n.target) + '">' + esc(n.label) + '</a></li>').join('') + '</ul></div>' +
-      '<div><h4>تواصل</h4><ul>' + (wa ? '<li><a class="ltr" href="https://wa.me/' + wa + '" target="_blank" rel="noopener">+' + wa + '</a></li>' : '') + (set.email ? '<li><a class="ltr" href="mailto:' + esc(set.email) + '">' + esc(set.email) + '</a></li>' : '') + (set.orderNote ? '<li>' + esc(set.orderNote) + '</li>' : '') + '</ul>' + socialsHTML() + '</div></div>' +
-      '<div class="legal"><span>© <span class="ltr">' + new Date().getFullYear() + ' ' + esc(set.storeName) + '</span> - ' + esc(S.footer.rights) + '</span><span>' + esc(S.footer.creditLabel) + ' <a class="ltr" href="' + esc(S.footer.creditUrl) + '" target="_blank" rel="noopener">' + esc(S.footer.creditName) + '</a> - ' + esc(S.footer.rights) + ' © <span class="ltr">' + esc(S.footer.creditName) + '</span></span></div></footer>' +
+      '<div><h4>تواصل</h4><ul>' + (set.email ? '<li><a class="ltr" href="mailto:' + esc(set.email) + '">' + esc(set.email) + '</a></li>' : '') + (set.orderNote ? '<li>' + esc(set.orderNote) + '</li>' : '') + '</ul>' + socialsHTML(true) + '</div></div>' +
+      '<div class="legal"><span>' + esc(S.footer.creditLabel) + ' <a href="' + esc(S.footer.designerUrl) + '" target="_blank" rel="noopener">' + esc(S.footer.designerName) + '</a></span><span>' + esc(S.footer.rights) + ' © <span class="ltr">' + new Date().getFullYear() + '</span> <a class="ltr" href="' + esc(S.footer.creditUrl) + '" target="_blank" rel="noopener">' + esc(S.footer.creditName) + '</a></span></div></footer>' +
       '<button class="dock" id="dock" aria-label="فتح السلة"><span class="pile" id="pile"></span><span class="lbl" id="docklbl"></span><span class="go">عرض السلة</span></button>' +
       '<div class="scrim" id="scrim"></div><aside class="sheet" id="cart" role="dialog" aria-modal="true" aria-label="السلة وإتمام الطلب"></aside><aside class="sheet pdsheet" id="pd" role="dialog" aria-modal="true" aria-label="تفاصيل المنتج"></aside>' +
       '<div class="toast" id="toast" role="status"></div><div class="lightbox" id="lb"><button class="icon-btn" aria-label="إغلاق">' + IC.close + '</button><div class="in" id="lbin"></div></div></div>';
