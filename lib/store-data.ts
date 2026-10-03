@@ -34,7 +34,7 @@ const DOC_DEFAULTS: Row = {
   settings: { storeName: "Raghad Beauty", storeNameAr: "رغد بيوتي", currency: "₪", locale: "ar", accent: "#b4125f", ink: "#26102b", paper: "#fbf7fa", whatsapp: "", orderNote: "", deliveryNote: "" },
   hero: { visible: true, title: "", text: "", autoplay: true },
   copy: {},
-  footer: { about: "", rights: "جميع الحقوق محفوظة", creditLabel: "تصميم وتطوير", designerName: "نور", designerUrl: "https://portfolio.darb.co.il", creditName: "Darb", creditUrl: "https://darb.co.il" },
+  footer: { about: "", rights: "جميع الحقوق محفوظة", creditLabel: "تصميم وتطوير", designerName: "نور", creditName: "Darb", creditUrl: "https://darb.co.il" },
   labels: { textures: {}, usages: {} },
 };
 
