@@ -394,7 +394,7 @@ export function createStore(S, dict) {
 
     /* hero */
     let hi = 0, silk = null, lastTouch = 0;
-    function heroBtn() { const p = featured[hi], q = qtyOf(p.id), b = $('#hadd'); b.disabled = !canBuy(p); $('span', b).textContent = !priced(p) ? t('priceSoon') : q ? t('added') + ' (' + q + ') - أضيفي أخرى' : t('add'); }
+    function heroBtn() { const p = featured[hi], q = qtyOf(p.id), b = $('#hadd'); b.disabled = !canBuy(p); $('span', b).textContent = !priced(p) ? t('priceSoon') : q ? t('added') + ' (' + q + ')' : t('add'); }
     function setHero(i, user) {
       i = (i + featured.length) % featured.length; if (user) lastTouch = Date.now(); if (i === hi) return;
       hi = i; const p = featured[i], h = heroInfo(p), hero = $('#hero');
