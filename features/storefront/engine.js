@@ -409,10 +409,17 @@ export function createStore(S, dict) {
       heroBtn(); tint(featured[0].bg);
       on($('#hadd'), 'click', () => { const p = featured[hi]; lastTouch = Date.now(); setQty(p.id, qtyOf(p.id) + 1, $('#stage')); });
       on($('#hmore'), 'click', () => openPD(featured[hi].id));
-      const stage = $('#stage'); let sx = null;
-      on(stage, 'touchstart', (e) => { sx = e.touches[0].clientX; }, { passive: true });
-      on(stage, 'touchend', (e) => { if (sx == null) return; const dx = e.changedTouches[0].clientX - sx; sx = null; if (Math.abs(dx) > 44) setHero(hi + (dx > 0 ? 1 : -1), true); else if (Math.abs(dx) < 8) openPD(featured[hi].id); });
-      on(stage, 'click', (e) => { if (e.detail && matchMedia('(hover:hover)').matches) openPD(featured[hi].id); });
+      /* Opening the product uses the browser's own click, which never fires for a
+         scroll or a drag. Touch handling here is only for the sideways swipe. */
+      const stage = $('#stage'); let touch = null, swiped = 0;
+      on(stage, 'touchstart', (e) => { const p = e.touches[0]; touch = e.touches.length === 1 ? { x: p.clientX, y: p.clientY } : null; }, { passive: true });
+      on(stage, 'touchcancel', () => { touch = null; });
+      on(stage, 'touchend', (e) => {
+        if (!touch || !e.changedTouches[0]) return;
+        const p = e.changedTouches[0], dx = p.clientX - touch.x, dy = p.clientY - touch.y; touch = null;
+        if (Math.abs(dx) > 44 && Math.abs(dx) > Math.abs(dy) * 1.5) { swiped = Date.now(); setHero(hi + (dx > 0 ? 1 : -1), true); }
+      });
+      on(stage, 'click', () => { if (Date.now() - swiped > 400) openPD(featured[hi].id); });
       stage.style.cursor = 'pointer';
       on($('#hero'), 'pointermove', (e) => { if (e.pointerType === 'mouse' && silk) silk.tilt(e.clientX / innerWidth * 2 - 1, e.clientY / innerHeight * 2 - 1); });
       timers.push(setTimeout(() => {
