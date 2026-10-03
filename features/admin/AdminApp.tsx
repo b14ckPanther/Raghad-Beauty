@@ -12,14 +12,14 @@ type Row = Record<string, any>;
 const TABLES: Record<string, string> = {
   brands: "brands", categories: "categories", needs: "needs", hairTypes: "hair_types", products: "products",
   coupons: "coupons", regions: "regions", payments: "payments", promos: "promos", usageGuide: "usage_guide",
-  sections: "sections", socials: "socials", nav: "nav_links",
+  sections: "sections", socials: "socials", nav: "nav_links", packages: "packages", deals: "deals",
 };
 const DOCS = ["settings", "hero", "copy", "footer", "labels"];
 
 const camel = (k: string) => k.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
 const snake = (k: string) => k.replace(/[A-Z]/g, (c) => "_" + c.toLowerCase());
 const toState = (row: Row) => Object.fromEntries(Object.entries(row).map(([k, v]) => [camel(k), v]));
-const toDb = (row: Row) => Object.fromEntries(Object.entries(row).filter(([k]) => k !== "createdAt").map(([k, v]) => [snake(k), v === "" && k === "expires" ? null : v]));
+const toDb = (row: Row) => Object.fromEntries(Object.entries(row).filter(([k]) => k !== "createdAt").map(([k, v]) => [snake(k), v === "" && (k === "expires" || k === "ends") ? null : v]));
 
 function fit(img: HTMLImageElement, w: number, h: number): Promise<Blob> {
   const canvas = document.createElement("canvas");

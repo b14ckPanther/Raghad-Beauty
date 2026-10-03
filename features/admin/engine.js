@@ -42,6 +42,41 @@ export function mountAdmin(host, S, db, ctx) {
         { k: 'bg', label: 'لون خلفية المنتج', type: 'color', half: true }, { k: 'r1', label: 'لون الخصلة 1', type: 'color', half: true }, { k: 'r2', label: 'لون الخصلة 2', type: 'color', half: true }
       ]
     },
+    packages: {
+      title: 'الباقات والعروض', add: 'باقة أو عرض جديد', reorder: true, icon: 'gift',
+      thumb: function (r) { return { img: r.thumb || r.img, c: r.bg }; },
+      name: function (r) { var ex = r.ends && r.ends < today(); return esc(r.title) + (ex ? '<span class="tag err">انتهى</span>' : ''); },
+      sub: function (r) { return (r.price == null ? '<span class="tag err">بدون سعر</span>' : '<span class="ltr">' + r.price + ' ' + cur() + '</span>') + (r.compareAt ? ' بدلا من <span class="ltr">' + r.compareAt + ' ' + cur() + '</span>' : '') + (r.ends ? ' - حتى <span class="ltr">' + esc(r.ends) + '</span>' : ''); },
+      toggles: [['available', 'متوفر'], ['visible', 'ظاهر في المتجر']],
+      blank: function () { return { id: uid('pk'), title: '', description: '', includes: [], price: null, compareAt: null, ends: '', img: '', thumb: '', bg: '#f9b0cd', available: true, visible: true }; },
+      fields: [
+        { k: 'img', label: 'صورة الباقة أو العرض', type: 'image' },
+        { k: 'title', label: 'العنوان', req: true },
+        { k: 'description', label: 'الوصف', type: 'textarea' },
+        { k: 'includes', label: 'ماذا تتضمن', type: 'lines', hint: 'سطر لكل منتج أو ميزة، مثل: 2 × Babosa' },
+        { k: 'price', label: 'سعر الباقة', type: 'number', nullable: true, hint: 'بدون سعر لا يمكن طلبها', half: true },
+        { k: 'compareAt', label: 'السعر قبل العرض', type: 'number', nullable: true, hint: 'اختياري، يظهر مشطوبا مع مقدار التوفير', half: true },
+        { k: 'ends', label: 'آخر يوم للعرض', type: 'date', hint: 'اختياري. بعده يختفي العرض تلقائيا', half: true },
+        { k: 'bg', label: 'لون الخلفية', type: 'color', half: true }
+      ]
+    },
+    deals: {
+      title: 'عروض الكمية (مثل: اشتري 3 واحصلي على 1 مجانا)', add: 'عرض كمية جديد', reorder: true, icon: 'tag',
+      name: function (r) { var ex = r.ends && r.ends < today(); return esc(r.title) + (ex ? '<span class="tag err">انتهى</span>' : r.active ? '<span class="tag ok">فعال</span>' : '<span class="tag">متوقف</span>'); },
+      sub: function (r) { return (r.type === 'bxgy' ? 'اشتري ' + r.buyQty + ' واحصلي على ' + r.freeQty + ' مجانا' : 'خصم ' + r.percent + '% عند شراء ' + r.buyQty + ' أو أكثر') + ' - ' + (r.products && r.products.length ? r.products.length + ' منتجات محددة' : 'كل المنتجات') + (r.ends ? ' - حتى <span class="ltr">' + esc(r.ends) + '</span>' : ''); },
+      toggles: [['active', 'فعال']],
+      blank: function () { return { id: uid('deal'), title: '', description: '', type: 'bxgy', buyQty: 3, freeQty: 1, percent: 0, products: [], ends: '', active: true }; },
+      fields: [
+        { k: 'title', label: 'عنوان العرض كما يظهر للزبونة', req: true, hint: 'مثل: اشتري 3 واحصلي على الرابع مجانا' },
+        { k: 'description', label: 'توضيح قصير', type: 'textarea' },
+        { k: 'type', label: 'نوع العرض', type: 'select', opts: function () { return [['bxgy', 'اشتري عددا واحصلي على قطع مجانا'], ['percent', 'خصم بالنسبة عند شراء عدد معين']]; } },
+        { k: 'buyQty', label: 'عدد القطع المطلوب شراؤها', type: 'number', req: true, half: true },
+        { k: 'freeQty', label: 'عدد القطع المجانية', type: 'number', hint: 'لنوع القطع المجانية. الأرخص هي المجانية', half: true },
+        { k: 'percent', label: 'نسبة الخصم %', type: 'number', hint: 'لنوع الخصم بالنسبة', half: true },
+        { k: 'ends', label: 'آخر يوم للعرض', type: 'date', hint: 'اختياري', half: true },
+        { k: 'products', label: 'المنتجات المشمولة', type: 'multi', opts: opts('products'), hint: 'بدون اختيار = كل المنتجات. الباقات غير مشمولة' }
+      ]
+    },
     categories: { title: 'الأقسام', add: 'قسم جديد', reorder: true, icon: 'grid', name: function (r) { return esc(r.name); }, sub: function (r) { return S.products.filter(function (p) { return p.category === r.id; }).length + ' منتج'; }, toggles: [['visible', 'ظاهر']], blank: function () { return { id: uid('cat'), name: '', visible: true }; }, fields: [{ k: 'name', label: 'اسم القسم', req: true }] },
     brands: { title: 'العلامات التجارية', add: 'علامة جديدة', reorder: true, icon: 'tag', name: function (r) { return '<span class="ltr">' + esc(r.name) + '</span>'; }, sub: function (r) { return esc(r.nameAr) + (r.origin ? ' - ' + esc(r.origin) : ''); }, toggles: [['visible', 'ظاهرة']], blank: function () { return { id: uid('b'), name: '', nameAr: '', origin: '', visible: true }; }, fields: [{ k: 'name', label: 'الاسم بالإنجليزية', ltr: true, req: true, half: true }, { k: 'nameAr', label: 'الاسم بالعربية', half: true }, { k: 'origin', label: 'بلد المنشأ' }] },
     needs: { title: 'أنواع المنتج (ترطيب، بروتين...)', add: 'نوع جديد', reorder: true, icon: 'drop', name: function (r) { return esc(r.name); }, sub: function () { return ''; }, blank: function () { return { id: uid('n'), name: '', icon: 'drop' }; }, fields: [{ k: 'name', label: 'الاسم', req: true }, { k: 'icon', label: 'الأيقونة', type: 'select', opts: function () { return [['drop', 'قطرة'], ['bond', 'روابط'], ['leaf', 'ورقة'], ['feather', 'ريشة']]; } }] },
@@ -71,14 +106,14 @@ export function mountAdmin(host, S, db, ctx) {
     ordering: { title: 'واتساب والطلب', obj: 'settings', fields: [{ k: 'whatsapp', label: 'رقم واتساب لاستقبال الطلبات', ltr: true, digits: true, hint: 'بالصيغة الدولية بدون + أو أصفار، مثل 9725XXXXXXXX' }, { k: 'currency', label: 'رمز العملة', ltr: true }, { k: 'orderNote', label: 'ملاحظة الطلب والدفع', type: 'textarea', hint: 'تظهر في صفحة المنتج وفي التذييل' }] },
     delivery: { title: 'قواعد التوصيل والحد الأدنى للطلب', obj: 'settings', fields: [{ k: 'minOrder', label: 'الحد الأدنى للطلب', type: 'number', hint: '0 = بدون حد أدنى. يحسب على مجموع المنتجات قبل الخصم والتوصيل' }, { k: 'deliveryRate', label: 'السعر لكل كم', type: 'number', step: '0.1', hint: 'الرسوم = المسافة × هذا الرقم', half: true }, { k: 'deliveryStep', label: 'التقريب للأعلى إلى أقرب', type: 'number', hint: 'مثلا 10: 27 تصبح 30 و 33 تصبح 40', half: true }, { k: 'deliveryMinFee', label: 'أقل رسوم توصيل', type: 'number', half: true }, { k: 'deliveryMaxFee', label: 'أعلى رسوم توصيل', type: 'number', hint: '0 = بدون سقف', half: true }, { k: 'deliveryNote', label: 'جملة تظهر فوق قائمة المناطق عند الطلب' }] },
     hero: { title: 'الواجهة الرئيسية', obj: 'hero', fields: [{ k: 'visible', label: 'إظهار الواجهة', type: 'toggle' }, { k: 'title', label: 'العنوان الكبير', req: true }, { k: 'text', label: 'النص تحت العنوان', type: 'textarea' }, { k: 'autoplay', label: 'تبديل المنتجات تلقائيا', type: 'toggle' }] },
-    copy: { title: 'نصوص الأقسام', obj: 'copy', fields: [{ k: 'catalogTitle', label: 'عنوان قسم المنتجات' }, { k: 'catalogText', label: 'وصف قسم المنتجات', type: 'textarea' }, { k: 'howTitle', label: 'عنوان طرق الاستخدام' }, { k: 'howText', label: 'وصف طرق الاستخدام', type: 'textarea' }, { k: 'reviewsTitle', label: 'عنوان التقييمات' }, { k: 'reviewsText', label: 'وصف التقييمات', type: 'textarea' }, { k: 'contactTitle', label: 'عنوان قسم التواصل' }, { k: 'contactText', label: 'نص قسم التواصل', type: 'textarea' }] },
+    copy: { title: 'نصوص الأقسام', obj: 'copy', fields: [{ k: 'catalogTitle', label: 'عنوان قسم المنتجات' }, { k: 'catalogText', label: 'وصف قسم المنتجات', type: 'textarea' }, { k: 'offersTitle', label: 'عنوان قسم الباقات والعروض' }, { k: 'offersText', label: 'وصف قسم الباقات والعروض', type: 'textarea' }, { k: 'howTitle', label: 'عنوان طرق الاستخدام' }, { k: 'howText', label: 'وصف طرق الاستخدام', type: 'textarea' }, { k: 'reviewsTitle', label: 'عنوان التقييمات' }, { k: 'reviewsText', label: 'وصف التقييمات', type: 'textarea' }, { k: 'contactTitle', label: 'عنوان قسم التواصل' }, { k: 'contactText', label: 'نص قسم التواصل', type: 'textarea' }] },
     branding: { title: 'العلامة والألوان', obj: 'settings', fields: [{ k: 'storeNameAr', label: 'اسم المتجر بالعربية', req: true, half: true }, { k: 'storeName', label: 'اسم المتجر بالإنجليزية', ltr: true, req: true, half: true }, { k: 'tagline', label: 'الجملة التعريفية' }, { k: 'accent', label: 'اللون الأساسي (الأزرار)', type: 'color', half: true }, { k: 'ink', label: 'لون النص', type: 'color', half: true }, { k: 'paper', label: 'لون الخلفية', type: 'color', half: true }] },
     footer: { title: 'التذييل', obj: 'footer', fields: [{ k: 'about', label: 'نبذة المتجر', type: 'textarea' }, { k: 'rights', label: 'نص الحقوق' }, { k: 'designerName', label: 'تصميم وتطوير', readonly: true, half: true }, { k: 'creditName', label: 'صاحب الحقوق', ltr: true, readonly: true, hint: 'ثابت: darb.co.il', half: true }] },
     settings: { title: 'محركات البحث واللغة', obj: 'settings', fields: [{ k: 'seoTitle', label: 'عنوان الصفحة في جوجل', hint: 'حتى 70 حرفا', max: 70 }, { k: 'seoDescription', label: 'وصف الصفحة في جوجل', type: 'textarea', hint: 'حتى 320 حرفا', max: 320 }, { k: '_lang', label: 'لغة المتجر', readonly: true, value: 'العربية (من اليمين لليسار)', hint: 'المتجر مجهز لإضافة لغات أخرى لاحقا دون إعادة تصميم. لا يظهر مبدل اللغة عند الإطلاق.' }] }
   };
   var NAV = [
     ['', [['dash', 'الرئيسية', 'home']]],
-    ['المتجر', [['products', 'المنتجات', 'jar'], ['categories', 'الأقسام والعلامات', 'grid'], ['filters', 'فلاتر الشعر', 'hair_wavy']]],
+    ['المتجر', [['products', 'المنتجات', 'jar'], ['packages', 'الباقات والعروض', 'gift'], ['categories', 'الأقسام والعلامات', 'grid'], ['filters', 'فلاتر الشعر', 'hair_wavy']]],
     ['الطلبات', [['coupons', 'الكوبونات', 'tag'], ['regions', 'مناطق التوصيل', 'truck'], ['payments', 'طرق الدفع', 'wallet'], ['ordering', 'واتساب والطلب', 'whatsapp']]],
     ['محتوى الصفحة', [['hero', 'الواجهة الرئيسية', 'image'], ['sections', 'ترتيب الأقسام', 'layers'], ['content', 'النصوص والعروض', 'note'], ['reviews', 'التقييمات', 'star']]],
     ['الهوية والتواصل', [['branding', 'العلامة والألوان', 'brush'], ['socials', 'حسابات التواصل', 'link'], ['footer', 'القوائم والتذييل', 'menu']]],
@@ -86,6 +121,7 @@ export function mountAdmin(host, S, db, ctx) {
   ];
   var SCREENS = {
     products: { lead: 'كل ما يظهر في بطاقة المنتج وصفحته. التغيير يظهر في المتجر فور الحفظ.', blocks: [['c', 'products']] },
+    packages: { lead: 'الباقة تباع كقطعة واحدة وتضاف إلى السلة مثل أي منتج. عرض الكمية يطبق تلقائيا في السلة عند تحقق شرطه.', blocks: [['x', 'offersection'], ['c', 'packages'], ['c', 'deals']] },
     categories: { lead: 'المتجر جاهز لعلامات وأقسام جديدة. القسم المخفي لا يظهر للزبائن.', blocks: [['c', 'categories'], ['c', 'brands']] },
     filters: { lead: 'هذه الخيارات تظهر في مرشد الشعر أعلى قائمة المنتجات.', blocks: [['c', 'hairTypes'], ['c', 'needs']] },
     coupons: { lead: 'الكوبون يعمل فقط إن كان فعالا وغير منتهي والطلب يبلغ الحد الأدنى.', blocks: [['c', 'coupons']] },
@@ -239,6 +275,12 @@ export function mountAdmin(host, S, db, ctx) {
       var p0 = S.products[0] || { name: '', nameAr: '', size: '', price: 0 }, p = { name: p0.name, nameAr: p0.nameAr, size: p0.size, price: p0.price || 0 }, r = S.regions[0] || { name: '-', fee: 0 };
       var msg = '*طلب جديد - ' + S.settings.storeName + '*\n\n*الزبونة*\nالاسم: (اسم الزبونة)\nالهاتف: (رقمها)\n\n*المنتجات*\n1. Skala ' + p.name + ' (' + p.nameAr + ') ' + p.size + '\n   2 × ' + p.price + ' ' + cur() + ' = ' + (p.price * 2) + ' ' + cur() + '\n\n*الحساب*\nمجموع المنتجات: ' + (p.price * 2) + ' ' + cur() + '\nالتوصيل (' + r.name + '): ' + r.fee + ' ' + cur() + '\n*المجموع النهائي: ' + (p.price * 2 + r.fee) + ' ' + cur() + '*\n\n*التوصيل*\nالمنطقة: ' + r.name + '\nالبلدة: ...\nالعنوان: ...';
       el.innerHTML = '<div class="panel"><h2>شكل الرسالة التي تصلك (مثال)</h2><p class="lead" style="margin-bottom:10px">' + (S.settings.whatsapp ? 'إلى الرقم <span class="ltr">+' + esc(S.settings.whatsapp) + '</span>' : 'لم يحدد رقم واتساب بعد، والطلب عبر الموقع متوقف حتى تحديده.') + '</p><div class="wab"><div class="bubble">' + esc(msg).replace(/\*([^*\n]+)\*/g, '<b>$1</b>') + '</div></div></div>';
+    }
+    if (k === 'offersection') {
+      var sec = S.sections.filter(function (x) { return x.id === 'offers'; })[0];
+      if (!sec) { el.innerHTML = ''; return; }
+      el.innerHTML = '<div class="panel" style="margin-bottom:18px"><label class="sw"><input type="checkbox" id="offsw"' + (sec.visible ? ' checked' : '') + '>إظهار قسم الباقات والعروض في المتجر</label><p class="lead" style="margin:4px 0 0">عند الإيقاف يختفي القسم كله من المتجر مع بقاء الباقات والعروض محفوظة هنا. عرض الكمية الفعال يبقى مطبقا في السلة حتى لو كان القسم مخفيا؛ لإيقافه أطفئي زر فعال عنده.</p></div>';
+      $('#offsw').onchange = function () { sec.visible = this.checked; commit(sec.visible ? 'القسم ظاهر في المتجر' : 'أخفي القسم من المتجر', db.saveRow('sections', sec, S.sections.indexOf(sec))); };
     }
     if (k === 'recalc') {
       el.innerHTML = '<div class="panel" style="margin-top:26px"><h2>إعادة حساب الرسوم</h2><p class="lead">يحسب رسوم كل منطقة من مسافتها حسب القواعد أعلاه. الاستلام الشخصي (مسافة 0 ورسوم 0) لا يتغير. احفظي القواعد أولا إن عدلتها.</p><button class="btn ghost" id="recalc">' + IC.truck + 'حساب رسوم كل المناطق من المسافة</button></div>';
