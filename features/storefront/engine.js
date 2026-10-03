@@ -137,9 +137,15 @@ export function createStore(S, dict) {
     },
     catalog() {
       const g = gridHTML({ hair: '', need: '', q: '' }, () => 0);
+      /* Each filter is one compact picker that expands into a full-width list, so
+         options never wrap into uneven rows. */
+      const pick = (k, label) => '<button class="fpick" data-fopen="' + k + '" aria-expanded="false" aria-controls="fp-' + k + '"><span><small>' + label + '</small><b id="fv-' + k + '">' + t('all') + '</b></span>' + IC.down + '</button>';
+      const opt = (k, v, name, icon) => '<button class="fopt" data-f' + k + '="' + esc(v) + '" data-name="' + esc(name) + '" aria-pressed="' + (v === '') + '">' + icon + '<span>' + esc(name) + '</span>' + IC.check + '</button>';
+      const panel = (k, opts) => '<div class="fpanel" id="fp-' + k + '"><div><div class="fopts" role="group">' + opts.join('') + '</div></div></div>';
       return '<section class="sec" id="catalog"><h2>' + esc(S.copy.catalogTitle) + '</h2><p class="sub">' + esc(S.copy.catalogText) + '</p><div class="finder">' +
-        '<div class="flabel" id="fl-hair">نوع الشعر</div><div class="fgroup" role="group" aria-labelledby="fl-hair"><button class="fbtn" data-fhair="" aria-pressed="true">' + IC.hair_all + t('all') + '</button>' + S.hairTypes.map((h) => '<button class="fbtn" data-fhair="' + h.id + '" aria-pressed="false">' + (IC['hair_' + h.id] || IC.hair_wavy) + esc(h.name) + '</button>').join('') + '</div>' +
-        '<div class="flabel" id="fl-need">ما يحتاجه شعرك</div><div class="fgroup" role="group" aria-labelledby="fl-need"><button class="fbtn" data-fneed="" aria-pressed="true">' + t('all') + '</button>' + S.needs.map((n) => '<button class="fbtn" data-fneed="' + n.id + '" aria-pressed="false">' + (IC[n.icon] || IC.drop) + esc(n.name) + '</button>').join('') + (catalog.some((p) => p.family) ? '<button class="fbtn" data-fneed="family" aria-pressed="false">' + t('family') + '</button>' : '') + '</div>' +
+        '<div class="fsel">' + pick('hair', 'نوع الشعر') + pick('need', 'ما يحتاجه شعرك') + '</div>' +
+        panel('hair', [opt('hair', '', t('all'), IC.hair_all)].concat(S.hairTypes.map((h) => opt('hair', h.id, h.name, IC['hair_' + h.id] || IC.hair_wavy)))) +
+        panel('need', [opt('need', '', t('all'), IC.grid)].concat(S.needs.map((n) => opt('need', n.id, n.name, IC[n.icon] || IC.drop)), catalog.some((p) => p.family) ? [opt('need', 'family', t('family'), IC.user)] : [])) +
         '<div class="fbar"><label class="searchbox">' + IC.search + '<span class="sr">' + t('search') + '</span><input id="q" type="search" placeholder="' + t('search') + '" autocomplete="off"></label><span class="count" id="count">' + t('results', { n: g.count }) + '</span><button class="clear" id="clear" hidden>' + t('clear') + '</button></div></div>' +
         '<div class="grid" id="grid">' + g.html + '</div></section>';
     },
@@ -270,7 +276,15 @@ export function createStore(S, dict) {
       const g = gridHTML(F, qtyOf);
       $('#count').textContent = t('results', { n: g.count }); $('#clear').hidden = !(F.hair || F.need || F.q.trim()); grid.innerHTML = g.html;
     }
-    function setFilter(k, v) { F[k] = v; $$('[data-f' + k + ']').forEach((b) => b.setAttribute('aria-pressed', String(b.getAttribute('data-f' + k) === v))); renderGrid(); }
+    function openPicker(k) {
+      ['hair', 'need'].forEach((x) => { const on = x === k && !$('#fp-' + x).classList.contains('on'); $('#fp-' + x).classList.toggle('on', on); $('[data-fopen="' + x + '"]').setAttribute('aria-expanded', String(on)); });
+    }
+    function setFilter(k, v) {
+      F[k] = v;
+      $$('[data-f' + k + ']').forEach((b) => { const on = b.getAttribute('data-f' + k) === v; b.setAttribute('aria-pressed', String(on)); if (on) $('#fv-' + k).textContent = b.dataset.name; });
+      $('[data-fopen="' + k + '"]').classList.toggle('set', v !== '');
+      openPicker(null); renderGrid();
+    }
     on($('#q'), 'input', (e) => { F.q = e.target.value; renderGrid(); });
     on($('#clear'), 'click', () => { $('#q').value = ''; F.q = ''; setFilter('hair', ''); setFilter('need', ''); });
 
@@ -490,7 +504,7 @@ export function createStore(S, dict) {
 
     /* delegated events */
     on(host, 'click', (e) => {
-      const el = e.target.closest('[data-add],[data-inc],[data-dec],[data-rm],[data-open],[data-close],[data-step],[data-fhair],[data-fneed],[data-hero],[data-pdq],[data-pdadd],[data-couponx],[data-rate],[data-shot],[data-rmphoto],#copymsg,#donecart,#wago,a[href="#top"]');
+      const el = e.target.closest('[data-add],[data-inc],[data-dec],[data-rm],[data-open],[data-close],[data-step],[data-fopen],[data-fhair],[data-fneed],[data-hero],[data-pdq],[data-pdadd],[data-couponx],[data-rate],[data-shot],[data-rmphoto],#copymsg,#donecart,#wago,a[href="#top"]');
       if (!el) return; const d = el.dataset;
       if ('add' in d) { const card = el.closest('.pc,.ofc'); return setQty(d.add, qtyOf(d.add) + 1, card ? $('.field img', card) || $('.field', card) : el); }
       if ('inc' in d) return setQty(d.inc, qtyOf(d.inc) + 1, el);
@@ -499,6 +513,7 @@ export function createStore(S, dict) {
       if ('open' in d) return openPD(d.open);
       if ('close' in d) return close();
       if ('step' in d) return goStep(+d.step);
+      if ('fopen' in d) return openPicker(d.fopen);
       if ('fhair' in d) return setFilter('hair', d.fhair);
       if ('fneed' in d) return setFilter('need', d.fneed);
       if ('hero' in d) return setHero(+d.hero, true);
