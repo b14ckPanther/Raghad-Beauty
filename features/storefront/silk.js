@@ -72,7 +72,7 @@
     'void main(){ vQ = aP * 0.5 + 0.5; vec3 p = uGround > 0.5 ? vec3(aP.x * uRect.z, uRect.y, aP.y * uRect.w) : vec3(uRect.x + aP.x * uRect.z, uRect.y + aP.y * uRect.w, 0.0); gl_Position = uPV * vec4(p, 1.0); }';
   var QFS = 'precision mediump float; uniform sampler2D uTex; uniform float uGround, uAlpha; varying vec2 vQ;' +
     'void main(){ if (uGround > 0.5) { float d = length(vQ - 0.5) * 2.0; float a = smoothstep(1.0, 0.1, d); gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0) * a * a * 0.34 * uAlpha; }' +
-    ' else { vec4 c = texture2D(uTex, vec2(vQ.x, 1.0 - vQ.y)); gl_FragColor = c * uAlpha; } }';
+    ' else { vec4 c = texture2D(uTex, vec2(vQ.x, 1.0 - vQ.y)); c.rgb *= c.a; gl_FragColor = c * uAlpha; } }';
 
   function prog(gl, vs, fs) {
     var p = gl.createProgram();
@@ -110,7 +110,8 @@ export function Silk(canvas, opts) {
     var aUV = gl.getAttribLocation(P1, 'aUV'), aP = gl.getAttribLocation(P2, 'aP');
 
     var tex = gl.createTexture(), hasTex = false, texCache = {};
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+    /* alpha is premultiplied in the shader, so the result never depends on how a browser decodes the image */
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
 
     var st = { c1: hex('#b4125f'), c2: hex('#f2a12a'), curl: 0.5, t1: null, t2: null, tcurl: 0.5, jar: 0, jarT: 1, yaw: 0, pitch: 0, tyaw: 0, tpitch: 0, time: 0, spin: 0 };
     st.t1 = st.c1.slice(); st.t2 = st.c2.slice();
