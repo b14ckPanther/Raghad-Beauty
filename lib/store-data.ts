@@ -33,7 +33,7 @@ export function camelRow(row: Row): Row {
 }
 
 const DOC_DEFAULTS: Row = {
-  settings: { storeName: "Raghad Beauty", storeNameAr: "رغد بيوتي", currency: "₪", locale: "ar", accent: "#b4125f", ink: "#26102b", paper: "#fbf7fa", whatsapp: "", orderNote: "", deliveryNote: "" },
+  settings: { storeName: "Raghad Beauty", storeNameAr: "رغد بيوتي", currency: "₪", locale: "ar", accent: "#b4125f", ink: "#26102b", paper: "#fdebf1", whatsapp: "", orderNote: "", deliveryNote: "" },
   hero: { visible: true, title: "", text: "", autoplay: true },
   copy: {},
   footer: { about: "", rights: "جميع الحقوق محفوظة", creditLabel: "تصميم وتطوير", designerName: "نور", creditName: "Darb", creditUrl: "https://darb.co.il" },
