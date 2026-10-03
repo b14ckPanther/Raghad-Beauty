@@ -453,3 +453,10 @@ footer .about{color:var(--mute);max-width:26em;margin-top:10px}
 .hero:has(+ .promo){height:calc(100svh - 56px - env(safe-area-inset-bottom))}
 .hero + .promo{padding-bottom:calc(14px + env(safe-area-inset-bottom));min-height:calc(56px + env(safe-area-inset-bottom))}
 @media (min-width:720px){.hero{max-height:900px}.hero:has(+ .promo){max-height:900px}.hero + .promo{padding-bottom:14px;min-height:56px}}
+
+/* Installed app on iPhone: "svh" there leaves out the status-bar area, which
+   ended the first screen above the bottom edge. Use the real screen height. */
+@media (display-mode:standalone) and (max-width:719px){
+  .hero{height:var(--app-h,100vh)}
+  .hero:has(+ .promo){height:calc(var(--app-h,100vh) - 56px - env(safe-area-inset-bottom))}
+}

@@ -2,7 +2,7 @@
    - Pages: network first, falling back to the last copy, then the offline page.
    - Build assets, icons and product images: cached after first use.
    - Admin, API and Supabase data are never cached. */
-const VERSION = "rb-v2";
+const VERSION = "rb-v3";
 const PAGES = VERSION + "-pages";
 const ASSETS = VERSION + "-assets";
 const IMAGES = VERSION + "-images";

@@ -189,6 +189,11 @@ export function createStore(S, dict) {
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const today = () => new Date().toISOString().slice(0, 10);
     const timers = [];
+    /* installed app: measure the real screen height (see the standalone rule in store.css) */
+    if (matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) {
+      const fit = () => rb.style.setProperty('--app-h', window.innerHeight + 'px');
+      fit(); on(window, 'resize', fit); on(window, 'orientationchange', () => setTimeout(fit, 250));
+    }
     const tint = (c) => { let m = document.querySelector('meta[name="theme-color"]'); if (!m) { m = document.createElement('meta'); m.name = 'theme-color'; document.head.appendChild(m); } m.content = c; };
 
     /* cart */
