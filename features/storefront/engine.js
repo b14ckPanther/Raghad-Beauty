@@ -22,6 +22,7 @@ export function createStore(S, dict) {
   const wa = digits(set.whatsapp);
   const regions = S.regions.filter((r) => r.active);
   const pays = S.payments.filter((x) => x.active);
+  const minOrder = Number(set.minOrder) || 0;
   const catalog = S.products;
   let featured = catalog.filter((p) => p.featured && p.available).slice(0, 6);
   if (!featured.length) featured = catalog.filter((p) => p.available).slice(0, 5);
@@ -298,9 +299,10 @@ export function createStore(S, dict) {
         body = cart.items.map((i) => { const p = prod(i.id); return '<div class="line"><div class="ph" style="--c:' + esc(p.bg) + '"><img src="' + esc(p.thumb || p.img) + '" alt=""></div><div><h4 class="ltr">' + esc(p.name) + '</h4><div class="each">' + esc(p.nameAr) + ' - ' + money(p.price) + ' للقطعة</div><div class="ctl"><span class="stepper"><button data-dec="' + p.id + '" aria-label="إنقاص الكمية">' + IC.minus + '</button><b>' + i.qty + '</b><button data-inc="' + p.id + '" aria-label="زيادة الكمية">' + IC.plus + '</button></span><button class="rm" data-rm="' + p.id + '" aria-label="إزالة ' + esc(p.name) + '">' + IC.trash + '</button></div></div><div class="lt">' + money(p.price * i.qty) + '</div></div>'; }).join('') +
           '<form class="coupon" id="cform"><input id="cin" aria-label="' + t('cart.coupon') + '" placeholder="' + t('cart.coupon') + '" value="' + esc(tt.c ? tt.c.code : '') + '" autocomplete="off" autocapitalize="characters"><button class="btn dark"' + (busy ? ' disabled' : '') + '>' + t('cart.apply') + '</button></form>' +
           (tt.c ? '<div class="cmsg ' + (tt.short ? 'no' : 'ok') + '" role="status">' + (tt.short ? '' : IC.check) + '<span>' + (tt.short ? 'هذا الكوبون للطلبات من ' + plain(tt.c.min) + ' وما فوق. ينقصك ' + plain(tt.short) + '.' : 'تم تطبيق ' + esc(tt.c.code) + (tt.c.type === 'percent' ? ' (خصم ' + num(tt.c.value) + '%)' : ' (خصم ' + plain(tt.c.value) + ')')) + '</span><button class="clear" data-couponx>' + t('cart.remove') + '</button></div>' : cart.couponMsg ? '<div class="cmsg no" role="status"><span>' + esc(cart.couponMsg) + '</span></div>' : '');
-        foot = sumHTML(tt) + (wa ? '<button class="btn block" data-step="2">' + t('cart.next') + '</button>' : '<p class="notice info">' + t('order.soon') + '</p>');
+        const lack = minOrder - tt.sub;
+        foot = sumHTML(tt) + (!wa ? '<p class="notice info">' + t('order.soon') + '</p>' : lack > 0 ? '<p class="notice" role="status">الحد الأدنى للطلب ' + money(minOrder) + '. أضيفي منتجات بقيمة ' + money(lack) + ' لإكمال الطلب.</p><button class="btn block" disabled>' + t('cart.next') + '</button>' : '<button class="btn block" data-step="2">' + t('cart.next') + '</button>');
       } else if (step === 2) {
-        body = (regions.length ? '<div class="gtitle">منطقة التوصيل</div>' + (set.deliveryNote ? '<p class="hint" style="margin:-4px 0 10px">' + esc(set.deliveryNote) + '</p>' : '') + radios('reg', regions, cart.region, (r) => '<span>' + esc(r.name) + '<small>' + esc(r.eta) + '</small></span>' + (r.fee ? money(r.fee) : '<b>مجانا</b>')) + (errs.region ? '<p class="errline" style="margin-top:8px">' + errs.region + '</p>' : '') : '') +
+        body = (regions.length ? '<div class="gtitle">منطقة التوصيل</div>' + (set.deliveryNote ? '<p class="hint" style="margin:-4px 0 10px">' + esc(set.deliveryNote) + '</p>' : '') + radios('reg', regions, cart.region, (r) => '<span>' + esc(r.name) + '<small>' + esc([r.towns, r.eta].filter(Boolean).join(' - ')) + '</small></span>' + (r.fee ? money(r.fee) : '<b>مجانا</b>')) + (errs.region ? '<p class="errline" style="margin-top:8px">' + errs.region + '</p>' : '') : '') +
           (pays.length ? '<div class="gtitle">طريقة الدفع</div>' + radios('pay', pays, cart.payment, (m) => '<span>' + esc(m.name) + '<small>' + esc(m.note) + (m.number ? ' <bdi class="ltr" style="font-weight:700">' + esc(m.number) + '</bdi>' : '') + '</small></span>') + (errs.payment ? '<p class="errline" style="margin-top:8px">' + errs.payment + '</p>' : '') : '') +
           '<div class="gtitle">بياناتك</div><div style="display:grid;gap:14px">' + fld('name', 'الاسم الكامل', 'autocomplete="name" maxlength="60"') + fld('phone', 'رقم الهاتف', 'type="tel" inputmode="tel" dir="ltr" style="text-align:right" autocomplete="tel" placeholder="05X-XXXXXXX" maxlength="16"') + fld('city', 'البلدة / المدينة', 'autocomplete="address-level2" maxlength="60"') + fld('address', 'الشارع ورقم البيت', 'autocomplete="street-address" maxlength="120"', isPickup(tt.reg)) +
           '<label class="fld"><span>ملاحظات للطلب <em>(اختياري)</em></span><textarea data-c="notes" maxlength="300" placeholder="مثلا: أفضل وقت للتوصيل">' + esc(cart.customer.notes) + '</textarea></label></div>';
@@ -329,7 +331,7 @@ export function createStore(S, dict) {
       return !Object.keys(errs).length;
     }
     function goStep(n) {
-      if (n >= 2 && !wa) return;
+      if (n >= 2 && (!wa || totals().sub < minOrder)) { step = 1; return renderCart(); }
       if (n === 3 && !validate()) { step = 2; renderCart(); const bad = $('#cart [aria-invalid], #cart .errline'); if (bad) { bad.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' }); if (bad.focus) bad.focus({ preventScroll: true }); } return; }
       if (n !== 2) errs = {};
       step = n; renderCart(); $('#cbody').scrollTop = 0;

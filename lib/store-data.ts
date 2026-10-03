@@ -58,7 +58,7 @@ export async function getStore(): Promise<StoreState> {
   state.products = state.products
     .filter((p: Row) => p.visible)
     .map(({ sourceNote: _note, createdAt: _at, ...p }: Row) => ({ ...p, price: p.price == null ? null : Number(p.price), compareAt: p.compareAt == null ? 0 : Number(p.compareAt) }));
-  for (const key of ["regions", "hairTypes"]) state[key] = state[key].map((r: Row) => ({ ...r, fee: r.fee == null ? undefined : Number(r.fee), curl: r.curl == null ? undefined : Number(r.curl) }));
+  for (const key of ["regions", "hairTypes"]) state[key] = state[key].map((r: Row) => ({ ...r, fee: r.fee == null ? undefined : Number(r.fee), km: r.km == null ? undefined : Number(r.km), curl: r.curl == null ? undefined : Number(r.curl) }));
   state.reviews = (reviews.data ?? []).map((r) => ({ id: r.id, name: r.name, product: r.product, rating: r.rating, text: r.text, photos: r.photos ?? [], date: String(r.created_at).slice(0, 10) }));
   return state;
 }
