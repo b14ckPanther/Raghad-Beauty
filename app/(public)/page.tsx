@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { Pwa } from "@/features/pwa/Pwa";
+import { Splash } from "@/features/splash/Splash";
 import { Storefront } from "@/features/storefront/Storefront";
 import { createStore } from "@/features/storefront/engine";
 import { getDictionary } from "@/lib/i18n";
@@ -27,6 +28,7 @@ export default async function HomePage() {
   const html = createStore(state, getDictionary(state.settings.locale)).html();
   return (
     <>
+      <Splash nameAr={state.settings.storeNameAr} name={state.settings.storeName} />
       <Storefront state={state} html={html} />
       <Pwa name={state.settings.storeNameAr} />
     </>

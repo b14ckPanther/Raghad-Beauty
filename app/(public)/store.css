@@ -387,3 +387,31 @@ footer .about{color:var(--mute);max-width:26em;margin-top:10px}
   .rb{-webkit-user-select:none;user-select:none}
   .rb input,.rb textarea,.rb .bubble{-webkit-user-select:text;user-select:text}
 }
+
+/* opening splash */
+.splash{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:#26102b;color:#fbeef7;font-family:var(--font-stack);animation:splash-lift .8s cubic-bezier(.76,0,.18,1) 2.15s forwards}
+.no-splash .splash{display:none}
+.splash-in{display:grid;justify-items:center;gap:18px;margin-top:-8vh;animation:splash-rise .8s cubic-bezier(.76,0,.18,1) 2.15s forwards}
+.splash::before{content:"";position:absolute;inset:0;background:radial-gradient(70% 50% at 50% 42%,#40204a,transparent 70%);opacity:0;animation:splash-fade 1.2s ease .2s forwards}
+.splash-in{position:relative}
+.splash-mark{width:112px;height:112px;overflow:visible;filter:drop-shadow(0 0 16px rgba(255,156,203,.45))}
+.splash-mark path{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
+.splash-strand{stroke:url(#splash-g);stroke-width:3.2;animation:splash-draw 1.25s cubic-bezier(.65,0,.2,1) .15s forwards}
+.splash-sheen{stroke:#fff;stroke-width:1.1;stroke-dasharray:.16 1;stroke-dashoffset:.2;opacity:0;animation:splash-sheen .9s ease-in-out 1.2s forwards}
+.splash-name{display:grid;justify-items:center;gap:2px;line-height:1.2}
+.splash-name b{font-size:1.9rem;font-weight:800;opacity:0;transform:translateY(14px);animation:splash-up .6s cubic-bezier(.2,.9,.2,1) 1.05s forwards}
+.splash-name span{font-size:.78rem;font-weight:500;letter-spacing:.34em;margin-inline-end:-.34em;opacity:0;animation:splash-fade .7s ease 1.35s forwards}
+@keyframes splash-draw{to{stroke-dashoffset:0}}
+@keyframes splash-sheen{0%{opacity:.9;stroke-dashoffset:.2}100%{opacity:0;stroke-dashoffset:-1}}
+@keyframes splash-up{to{opacity:1;transform:none}}
+@keyframes splash-fade{to{opacity:.72}}
+@keyframes splash-lift{to{transform:translateY(-100%);visibility:hidden}}
+@keyframes splash-rise{to{transform:translateY(-30px);opacity:0}}
+@media (prefers-reduced-motion:reduce){
+  .splash{animation:splash-out .01s linear .9s forwards!important}
+  .splash-in{animation:none!important}
+  .splash-mark path{stroke-dashoffset:0;animation:none!important}
+  .splash-sheen{display:none}
+  .splash-name b,.splash-name span{opacity:1;transform:none;animation:none!important}
+}
+@keyframes splash-out{to{opacity:0;visibility:hidden}}
