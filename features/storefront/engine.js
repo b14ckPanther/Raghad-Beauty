@@ -250,6 +250,7 @@ export function createStore(S, dict) {
       $('#pile').innerHTML = cart.items.slice(-3).map((i) => { const p = prod(i.id); return '<img src="' + esc(p.thumb || p.img) + '" alt="">'; }).join('');
       $('#docklbl').innerHTML = n + (n === 1 ? ' منتج' : ' منتجات') + '<small>' + money(tt.sub) + '</small>';
       $('#dock').classList.toggle('show', n > 0 && !openSheet);
+      rb.classList.toggle('has-dock', n > 0);
     }
     function fly(p, from) {
       const dock = $('#dock'), tgt = getComputedStyle(dock).display !== 'none' ? dock : $('#cartbtn');

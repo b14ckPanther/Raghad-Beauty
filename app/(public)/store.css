@@ -223,7 +223,7 @@ ul{margin:0;padding:0}
 .socials{display:flex;gap:10px;flex-wrap:wrap}
 .socials a{display:inline-flex;align-items:center;gap:.5em;min-height:46px;min-width:46px;justify-content:center;padding:0 12px;border-radius:999px;box-shadow:inset 0 0 0 1.5px currentColor;color:inherit;text-decoration:none;font-weight:600;font-size:.9rem;opacity:.9}
 .socials a svg{width:20px;height:20px}
-footer{padding:40px var(--pad) 120px;max-width:1320px;margin-inline:auto;display:grid;gap:26px}
+footer{padding:40px var(--pad) calc(26px + env(safe-area-inset-bottom));max-width:1320px;margin-inline:auto;display:grid;gap:26px}
 footer .cols{display:grid;gap:26px}
 footer h4{margin:0 0 8px;font-size:.95rem;font-weight:800}
 footer a{color:inherit;text-decoration:none}
@@ -460,3 +460,6 @@ footer .about{color:var(--mute);max-width:26em;margin-top:10px}
   .hero{height:var(--app-h,100vh)}
   .hero:has(+ .promo){height:calc(var(--app-h,100vh) - 56px - env(safe-area-inset-bottom))}
 }
+
+/* leave room for the cart bar only while it is on screen */
+@media (max-width:719px){.rb.has-dock footer{padding-bottom:calc(96px + env(safe-area-inset-bottom))}}
