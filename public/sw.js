@@ -2,7 +2,7 @@
    - Pages: network first, falling back to the last copy, then the offline page.
    - Build assets, icons and product images: cached after first use.
    - Admin, API and Supabase data are never cached. */
-const VERSION = "rb-v1";
+const VERSION = "rb-v2";
 const PAGES = VERSION + "-pages";
 const ASSETS = VERSION + "-assets";
 const IMAGES = VERSION + "-images";
@@ -37,7 +37,8 @@ async function cacheFirst(request, cacheName, maxEntries) {
 async function pageNetworkFirst(request) {
   const cache = await caches.open(PAGES);
   try {
-    const res = await fetch(request);
+    /* always ask the server, so a change saved in the admin shows on the next open */
+    const res = await fetch(request, { cache: "no-store" });
     if (res.ok && res.type === "basic") cache.put("/", res.clone());
     return res;
   } catch {
