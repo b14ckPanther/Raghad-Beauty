@@ -8,7 +8,9 @@ const locale: Locale = "ar";
 export const metadata: Metadata = {
   title: "Raghad Beauty - رغد بيوتي",
   applicationName: "Raghad Beauty",
-  icons: { icon: "/icon.svg" },
+  icons: { icon: "/icon.svg", apple: "/icons/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: "رغد بيوتي", statusBarStyle: "black-translucent" },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {

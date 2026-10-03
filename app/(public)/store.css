@@ -364,3 +364,23 @@ footer .about{color:var(--mute);max-width:26em;margin-top:10px}
 .pc .body{flex:1;grid-template-rows:auto 1fr auto}
 
 .sec{scroll-margin-top:72px}
+
+/* installed app (PWA) */
+.top{padding-top:calc(12px + env(safe-area-inset-top))}
+.hero{padding-top:calc(66px + env(safe-area-inset-top))}
+.pwa{position:fixed;z-index:45;inset-inline:12px;bottom:calc(84px + env(safe-area-inset-bottom));display:grid;grid-template-columns:auto 1fr;gap:10px 12px;align-items:center;padding:14px;border-radius:22px;background:#fff;color:var(--ink,#26102b);box-shadow:0 24px 60px -20px rgba(38,16,43,.55),inset 0 0 0 1px rgba(38,16,43,.1);font-family:var(--font-stack);animation:pwa-in .5s cubic-bezier(.2,.9,.2,1)}
+@keyframes pwa-in{from{transform:translateY(30px);opacity:0}}
+.pwa img{border-radius:14px}
+.pwa-t b{display:block;font-weight:800;line-height:1.4}
+.pwa-t span{color:#75627b;font-size:.88rem;line-height:1.6}
+.pwa-t svg{width:1.2em;height:1.2em;vertical-align:-.25em;margin-inline:4px;color:#26102b}
+.pwa-a{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end}
+.pwa-a .btn{min-height:46px;background:#b4125f;color:#fff}
+.pwa-x{min-height:46px;padding:0 16px;font-weight:700;color:#75627b;border-radius:999px}
+@media (min-width:720px){.pwa{inset-inline:auto 24px;bottom:24px;width:380px}.hero{padding-top:calc(66px + env(safe-area-inset-top))}}
+@media (min-width:1080px){.hero{padding-top:calc(96px + env(safe-area-inset-top))}}
+@media (display-mode:standalone){
+  html{overscroll-behavior-y:none}
+  .rb{-webkit-user-select:none;user-select:none}
+  .rb input,.rb textarea,.rb .bubble{-webkit-user-select:text;user-select:text}
+}

@@ -148,6 +148,7 @@ export function createStore(S, dict) {
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const today = () => new Date().toISOString().slice(0, 10);
     const timers = [];
+    const tint = (c) => { let m = document.querySelector('meta[name="theme-color"]'); if (!m) { m = document.createElement('meta'); m.name = 'theme-color'; document.head.appendChild(m); } m.content = c; };
 
     /* cart */
     const CK = 'rb_cart_v1';
@@ -394,6 +395,7 @@ export function createStore(S, dict) {
     function setHero(i, user) {
       i = (i + featured.length) % featured.length; if (user) lastTouch = Date.now(); if (i === hi) return;
       hi = i; const p = featured[i], h = heroInfo(p), hero = $('#hero');
+      if (!$('#top').classList.contains('stuck')) tint(p.bg);
       rb.style.setProperty('--hbg', p.bg); rb.style.setProperty('--hink', lum(p.bg) < 0.46 ? '#ffffff' : set.ink);
       hero.classList.add('swap');
       timers.push(setTimeout(() => { $('#hname').innerHTML = h.name; $('#hprice').innerHTML = h.price; $('#hchips').innerHTML = h.chips; heroBtn(); hero.classList.remove('swap'); }, reduce ? 0 : 220));
@@ -402,7 +404,7 @@ export function createStore(S, dict) {
       if (silk) silk.set({ src: p.img, r1: p.r1, r2: p.r2, curl: curlOf(p) });
     }
     if (hasHero) {
-      heroBtn();
+      heroBtn(); tint(featured[0].bg);
       on($('#hadd'), 'click', () => { const p = featured[hi]; lastTouch = Date.now(); setQty(p.id, qtyOf(p.id) + 1, $('#stage')); });
       on($('#hmore'), 'click', () => openPD(featured[hi].id));
       const stage = $('#stage'); let sx = null;
@@ -424,7 +426,7 @@ export function createStore(S, dict) {
         ac.signal.addEventListener('abort', () => silk.stop());
       }, 60));
       let tick = false;
-      on(window, 'scroll', () => { if (tick) return; tick = true; requestAnimationFrame(() => { tick = false; const h = $('#hero'); $('#top').classList.toggle('stuck', scrollY > h.offsetTop + h.offsetHeight - 70); }); }, { passive: true });
+      on(window, 'scroll', () => { if (tick) return; tick = true; requestAnimationFrame(() => { tick = false; const h = $('#hero'); const st = scrollY > h.offsetTop + h.offsetHeight - 70; if (st !== $('#top').classList.contains('stuck')) { $('#top').classList.toggle('stuck', st); tint(st ? set.paper : featured[hi].bg); } }); }, { passive: true });
     }
 
     /* delegated events */

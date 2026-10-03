@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { Pwa } from "@/features/pwa/Pwa";
 import { Storefront } from "@/features/storefront/Storefront";
 import { createStore } from "@/features/storefront/engine";
 import { getDictionary } from "@/lib/i18n";
@@ -24,5 +25,10 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function HomePage() {
   const state = await getStore();
   const html = createStore(state, getDictionary(state.settings.locale)).html();
-  return <Storefront state={state} html={html} />;
+  return (
+    <>
+      <Storefront state={state} html={html} />
+      <Pwa name={state.settings.storeNameAr} />
+    </>
+  );
 }
