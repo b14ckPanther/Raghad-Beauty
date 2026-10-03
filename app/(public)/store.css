@@ -272,8 +272,10 @@ footer .about{color:var(--mute);max-width:26em;margin-top:10px}
 .pd{display:grid}
 .pd-stage{position:relative;background:var(--c);min-height:300px;height:42svh;display:grid;place-items:center;perspective:900px;overflow:hidden;touch-action:pan-y}
 .pd-stage .tilt{transform-style:preserve-3d;transition:transform .2s ease-out;will-change:transform}
-.pd-stage img{height:min(36svh,330px);width:auto;filter:drop-shadow(0 30px 26px rgba(20,5,25,.32))}
-.pd-stage .glare{position:absolute;inset:0;background:radial-gradient(40% 40% at var(--gx,30%) var(--gy,20%),rgba(255,255,255,.42),transparent 70%);pointer-events:none;mix-blend-mode:soft-light}
+.pd-stage img{height:min(36svh,330px);width:auto;display:block}
+.pd-stage .tilt{position:relative}
+.pd-stage .tilt::after{content:"";position:absolute;inset:auto 14% -3%;height:9%;border-radius:50%;background:radial-gradient(closest-side,rgba(20,5,25,.34),transparent);z-index:-1;transform:translateZ(-1px)}
+.pd-stage .glare{position:absolute;inset:0;background:radial-gradient(40% 40% at var(--gx,30%) var(--gy,20%),rgba(255,255,255,.22),transparent 70%);pointer-events:none}
 .pd-body{padding:20px 18px 28px;display:grid;gap:16px}
 .pd-body .bl{font-size:.86rem;font-weight:600;color:var(--mute)}
 .pd-body h2{font-size:1.7rem;font-weight:800;line-height:1.2}
