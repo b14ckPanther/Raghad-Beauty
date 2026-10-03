@@ -54,7 +54,7 @@ export function mountAdmin(host, S, db, ctx) {
       blank: function () { return { id: uid('c'), code: '', type: 'percent', value: 10, min: 0, expires: '', active: true, label: '' }; },
       fields: [{ k: 'code', label: 'رمز الكوبون', ltr: true, req: true, upper: true, half: true }, { k: 'label', label: 'وصف داخلي', half: true }, { k: 'type', label: 'نوع الخصم', type: 'select', opts: function () { return [['percent', 'نسبة مئوية %'], ['fixed', 'مبلغ ثابت']]; }, half: true }, { k: 'value', label: 'قيمة الخصم', type: 'number', req: true, half: true }, { k: 'min', label: 'أقل مبلغ للطلب', type: 'number', hint: '0 = بدون حد أدنى', half: true }, { k: 'expires', label: 'ينتهي في', type: 'date', hint: 'اتركيه فارغا لكوبون دائم', half: true }]
     },
-    regions: { title: 'مناطق التوصيل', add: 'منطقة جديدة', reorder: true, icon: 'truck', name: function (r) { return esc(r.name); }, sub: function (r) { return (r.fee ? '<span class="ltr">' + r.fee + ' ' + cur() + '</span>' : 'مجانا') + (r.eta ? ' - ' + esc(r.eta) : ''); }, toggles: [['active', 'متاحة']], blank: function () { return { id: uid('r'), name: '', fee: 0, eta: '', active: true }; }, fields: [{ k: 'name', label: 'اسم المنطقة', req: true }, { k: 'fee', label: 'رسوم التوصيل', type: 'number', req: true, half: true }, { k: 'eta', label: 'مدة التوصيل', hint: 'مثل: 2-3 أيام', half: true }] },
+    regions: { title: 'مناطق التوصيل', add: 'منطقة جديدة', reorder: true, icon: 'truck', name: function (r) { return esc(r.name); }, sub: function (r) { return (r.fee ? '<span class="ltr">' + r.fee + ' ' + cur() + '</span>' : 'مجانا') + (r.km ? ' - <span class="ltr">' + r.km + ' km</span>' : '') + (r.towns ? ' - ' + esc(r.towns) : ''); }, toggles: [['active', 'متاحة']], blank: function () { return { id: uid('r'), name: '', towns: '', km: 0, fee: null, eta: '', active: true }; }, fields: [{ k: 'name', label: 'اسم المنطقة', req: true }, { k: 'towns', label: 'البلدات ضمن المنطقة', type: 'textarea', hint: 'تظهر للزبونة تحت اسم المنطقة لتعرف أين تقع بلدتها' }, { k: 'km', label: 'المسافة من نحف (كم)', type: 'number', half: true }, { k: 'fee', label: 'رسوم التوصيل', type: 'number', nullable: true, hint: 'اتركيها فارغة لتحسب تلقائيا من المسافة', half: true }, { k: 'eta', label: 'مدة التوصيل', hint: 'اختياري، مثل: 1-3 أيام' }] },
     payments: { title: 'طرق الدفع', add: 'طريقة دفع جديدة', reorder: true, icon: 'wallet', name: function (r) { return esc(r.name); }, sub: function (r) { return (r.number ? '<span class="ltr">' + esc(r.number) + '</span> - ' : '') + esc(r.note); }, toggles: [['active', 'متاحة']], blank: function () { return { id: uid('pay'), name: '', number: '', note: '', active: true }; }, fields: [{ k: 'name', label: 'اسم الطريقة', req: true }, { k: 'number', label: 'رقم التحويل (Bit مثلا)', ltr: true, hint: 'اتركيه فارغا للدفع نقدا' }, { k: 'note', label: 'توضيح يظهر للزبونة', type: 'textarea' }] },
     sections: { title: 'أقسام الصفحة الرئيسية', fixed: true, reorder: true, icon: 'layers', name: function (r) { return esc(r.title); }, sub: function () { return 'حركيه للأعلى أو الأسفل لتغيير ترتيبه في الصفحة'; }, toggles: [['visible', 'ظاهر']], fields: [{ k: 'title', label: 'الاسم الداخلي' }] },
     promos: { title: 'شريط العروض', add: 'عرض جديد', reorder: true, icon: 'tag', name: function (r) { return esc(r.text); }, sub: function (r) { return r.code ? 'الكوبون: <span class="ltr">' + esc(r.code) + '</span>' : ''; }, toggles: [['visible', 'ظاهر']], blank: function () { return { id: uid('pr'), text: '', code: '', visible: true }; }, fields: [{ k: 'text', label: 'نص العرض', req: true }, { k: 'code', label: 'رمز كوبون يظهر بجانبه', ltr: true, upper: true, hint: 'اختياري' }] },
@@ -69,7 +69,7 @@ export function mountAdmin(host, S, db, ctx) {
   };
   var SINGLE = {
     ordering: { title: 'واتساب والطلب', obj: 'settings', fields: [{ k: 'whatsapp', label: 'رقم واتساب لاستقبال الطلبات', ltr: true, digits: true, hint: 'بالصيغة الدولية بدون + أو أصفار، مثل 9725XXXXXXXX' }, { k: 'currency', label: 'رمز العملة', ltr: true }, { k: 'orderNote', label: 'ملاحظة الطلب والدفع', type: 'textarea', hint: 'تظهر في صفحة المنتج وفي التذييل' }] },
-    delivery: { title: 'ملاحظة التوصيل', obj: 'settings', fields: [{ k: 'deliveryNote', label: 'جملة تظهر فوق قائمة المناطق عند الطلب', hint: 'مثل: التوصيل متاح حاليا لمنطقة الشمال' }] },
+    delivery: { title: 'قواعد التوصيل والحد الأدنى للطلب', obj: 'settings', fields: [{ k: 'minOrder', label: 'الحد الأدنى للطلب', type: 'number', hint: '0 = بدون حد أدنى. يحسب على مجموع المنتجات قبل الخصم والتوصيل' }, { k: 'deliveryRate', label: 'السعر لكل كم', type: 'number', step: '0.1', hint: 'الرسوم = المسافة × هذا الرقم', half: true }, { k: 'deliveryStep', label: 'التقريب للأعلى إلى أقرب', type: 'number', hint: 'مثلا 10: 27 تصبح 30 و 33 تصبح 40', half: true }, { k: 'deliveryMinFee', label: 'أقل رسوم توصيل', type: 'number', half: true }, { k: 'deliveryMaxFee', label: 'أعلى رسوم توصيل', type: 'number', hint: '0 = بدون سقف', half: true }, { k: 'deliveryNote', label: 'جملة تظهر فوق قائمة المناطق عند الطلب' }] },
     hero: { title: 'الواجهة الرئيسية', obj: 'hero', fields: [{ k: 'visible', label: 'إظهار الواجهة', type: 'toggle' }, { k: 'title', label: 'العنوان الكبير', req: true }, { k: 'text', label: 'النص تحت العنوان', type: 'textarea' }, { k: 'autoplay', label: 'تبديل المنتجات تلقائيا', type: 'toggle' }] },
     copy: { title: 'نصوص الأقسام', obj: 'copy', fields: [{ k: 'catalogTitle', label: 'عنوان قسم المنتجات' }, { k: 'catalogText', label: 'وصف قسم المنتجات', type: 'textarea' }, { k: 'howTitle', label: 'عنوان طرق الاستخدام' }, { k: 'howText', label: 'وصف طرق الاستخدام', type: 'textarea' }, { k: 'reviewsTitle', label: 'عنوان التقييمات' }, { k: 'reviewsText', label: 'وصف التقييمات', type: 'textarea' }, { k: 'contactTitle', label: 'عنوان قسم التواصل' }, { k: 'contactText', label: 'نص قسم التواصل', type: 'textarea' }] },
     branding: { title: 'العلامة والألوان', obj: 'settings', fields: [{ k: 'storeNameAr', label: 'اسم المتجر بالعربية', req: true, half: true }, { k: 'storeName', label: 'اسم المتجر بالإنجليزية', ltr: true, req: true, half: true }, { k: 'tagline', label: 'الجملة التعريفية' }, { k: 'accent', label: 'اللون الأساسي (الأزرار)', type: 'color', half: true }, { k: 'ink', label: 'لون النص', type: 'color', half: true }, { k: 'paper', label: 'لون الخلفية', type: 'color', half: true }] },
@@ -89,7 +89,7 @@ export function mountAdmin(host, S, db, ctx) {
     categories: { lead: 'المتجر جاهز لعلامات وأقسام جديدة. القسم المخفي لا يظهر للزبائن.', blocks: [['c', 'categories'], ['c', 'brands']] },
     filters: { lead: 'هذه الخيارات تظهر في مرشد الشعر أعلى قائمة المنتجات.', blocks: [['c', 'hairTypes'], ['c', 'needs']] },
     coupons: { lead: 'الكوبون يعمل فقط إن كان فعالا وغير منتهي والطلب يبلغ الحد الأدنى.', blocks: [['c', 'coupons']] },
-    regions: { lead: 'المناطق المتاحة فقط تظهر للزبونة عند الطلب، وتضاف رسومها إلى المجموع ورسالة واتساب. لتوسيع التوصيل لاحقا فعلي المنطقة أو أضيفي منطقة جديدة.', blocks: [['c', 'regions'], ['s', 'delivery']] },
+    regions: { lead: 'المناطق المتاحة فقط تظهر للزبونة عند الطلب، وتضاف رسومها إلى المجموع ورسالة واتساب. لتوسيع التوصيل لاحقا فعلي المنطقة أو أضيفي منطقة جديدة.', blocks: [['c', 'regions'], ['s', 'delivery'], ['x', 'recalc']] },
     payments: { lead: 'تختار الزبونة طريقة الدفع عند الطلب، وتظهر في رسالة واتساب. رقم Bit يعدل من هنا.', blocks: [['c', 'payments']] },
     ordering: { lead: 'إلى هذا الرقم تصل رسالة الطلب الجاهزة.', blocks: [['s', 'ordering'], ['x', 'wapreview']] },
     hero: { lead: 'أول ما تراه الزبونة. المنتجات المعروضة هي المنتجات المعلمة "في الواجهة" (حتى 6).', blocks: [['s', 'hero'], ['x', 'featured']] },
@@ -101,6 +101,14 @@ export function mountAdmin(host, S, db, ctx) {
     settings: { lead: '', blocks: [['s', 'settings']] }
   };
   var titleOf = function (id) { var t = ''; NAV.forEach(function (g) { g[1].forEach(function (i) { if (i[0] === id) t = i[1]; }); }); return t; };
+
+  /* delivery fee from distance: km x rate, rounded up to the step, within min and max */
+  function feeFor(km) {
+    var st = S.settings, step = Number(st.deliveryStep) || 1, fee = Math.ceil((Number(km) || 0) * (Number(st.deliveryRate) || 0) / step - 1e-9) * step;
+    fee = Math.max(fee, Number(st.deliveryMinFee) || 0);
+    if (Number(st.deliveryMaxFee) > 0) fee = Math.min(fee, Number(st.deliveryMaxFee));
+    return fee;
+  }
 
   /* ---------- shell ---------- */
   var route = 'dash', rvFilter = 'pending', query = '';
@@ -220,6 +228,7 @@ export function mountAdmin(host, S, db, ctx) {
       if (!readForm($('#drawer'), c.fields, r)) return;
       if (key === 'coupons' && S.coupons.some(function (x) { return x !== r && x.code === r.code; })) return toast('يوجد كوبون آخر بنفس الرمز');
       if (key === 'products' && isNew) r.id = (r.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'p') + '-' + Math.random().toString(36).slice(2, 5);
+      if (key === 'regions' && r.fee == null) r.fee = feeFor(r.km);
       if (isNew) S[key].push(r);
       closeAll(); commit(isNew ? 'تمت الإضافة. المتجر محدث.' : null, db.saveRow(key, r, S[key].indexOf(r))); render();
     };
@@ -230,6 +239,10 @@ export function mountAdmin(host, S, db, ctx) {
       var p0 = S.products[0] || { name: '', nameAr: '', size: '', price: 0 }, p = { name: p0.name, nameAr: p0.nameAr, size: p0.size, price: p0.price || 0 }, r = S.regions[0] || { name: '-', fee: 0 };
       var msg = '*طلب جديد - ' + S.settings.storeName + '*\n\n*الزبونة*\nالاسم: (اسم الزبونة)\nالهاتف: (رقمها)\n\n*المنتجات*\n1. Skala ' + p.name + ' (' + p.nameAr + ') ' + p.size + '\n   2 × ' + p.price + ' ' + cur() + ' = ' + (p.price * 2) + ' ' + cur() + '\n\n*الحساب*\nمجموع المنتجات: ' + (p.price * 2) + ' ' + cur() + '\nالتوصيل (' + r.name + '): ' + r.fee + ' ' + cur() + '\n*المجموع النهائي: ' + (p.price * 2 + r.fee) + ' ' + cur() + '*\n\n*التوصيل*\nالمنطقة: ' + r.name + '\nالبلدة: ...\nالعنوان: ...';
       el.innerHTML = '<div class="panel"><h2>شكل الرسالة التي تصلك (مثال)</h2><p class="lead" style="margin-bottom:10px">' + (S.settings.whatsapp ? 'إلى الرقم <span class="ltr">+' + esc(S.settings.whatsapp) + '</span>' : 'لم يحدد رقم واتساب بعد، والطلب عبر الموقع متوقف حتى تحديده.') + '</p><div class="wab"><div class="bubble">' + esc(msg).replace(/\*([^*\n]+)\*/g, '<b>$1</b>') + '</div></div></div>';
+    }
+    if (k === 'recalc') {
+      el.innerHTML = '<div class="panel" style="margin-top:26px"><h2>إعادة حساب الرسوم</h2><p class="lead">يحسب رسوم كل منطقة من مسافتها حسب القواعد أعلاه. الاستلام الشخصي (مسافة 0 ورسوم 0) لا يتغير. احفظي القواعد أولا إن عدلتها.</p><button class="btn ghost" id="recalc">' + IC.truck + 'حساب رسوم كل المناطق من المسافة</button></div>';
+      $('#recalc').onclick = function () { S.regions.forEach(function (r) { if (!(Number(r.km) === 0 && Number(r.fee) === 0)) r.fee = feeFor(r.km); }); commit('حسبت الرسوم من جديد', db.saveOrder('regions', S.regions)); render(); };
     }
     if (k === 'featured') {
       var f = S.products.filter(function (p) { return p.featured; });
