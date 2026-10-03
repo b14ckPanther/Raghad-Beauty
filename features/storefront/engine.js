@@ -16,7 +16,10 @@ export function createStore(S, dict) {
   const t = (k, vars) => { let s = dict[k] || k; if (vars) for (const v in vars) s = s.replace('{' + v + '}', vars[v]); return s; };
   const money = (n) => '<span class="money"><i>' + esc(set.currency) + '</i>' + num(n) + '</span>';
   const plain = (n) => num(n) + ' ' + set.currency;
-  const prod = (id) => byId(S.products, id);
+  /* packages behave like products in the cart */
+  const offers = (S.packages || []).map((o) => Object.assign({}, o, { name: o.title, nameAr: '', size: '', isOffer: true }));
+  const deals = S.deals || [];
+  const prod = (id) => byId(S.products, id) || byId(offers, id);
   const priced = (p) => p.price != null && p.price > 0;
   const canBuy = (p) => p.available && priced(p);
   const wa = digits(set.whatsapp);
@@ -83,7 +86,42 @@ export function createStore(S, dict) {
     const waLink = withWa && wa ? '<a href="https://wa.me/' + wa + '" target="_blank" rel="noopener" aria-label="واتساب">' + IC.whatsapp + '</a>' : '';
     return s.length || waLink ? '<div class="socials">' + waLink + s.map((x) => { const known = IC[x.platform] && x.platform !== 'link'; return '<a href="' + esc(x.url) + '" target="_blank" rel="noopener" aria-label="' + esc(x.label) + '">' + (IC[x.platform] || IC.link) + (known ? '' : '<span>' + esc(x.label) + '</span>') + '</a>'; }).join('') + '</div>' : '';
   }
+  const lineName = (p) => p.isOffer ? p.title : p.nameAr + ' - ' + fullName(p) + ' ' + p.size;
+  /* Quantity deals: the single best one applies. Free items are the cheapest eligible ones. */
+  function dealFor(items) {
+    let best = { amount: 0, deal: null, hint: '' };
+    deals.forEach((d) => {
+      const prices = [];
+      items.forEach((i) => { const p = prod(i.id); if (p && !p.isOffer && (!d.products.length || d.products.includes(p.id))) for (let k = 0; k < i.qty; k++) prices.push(p.price); });
+      prices.sort((a, b) => a - b);
+      const n = prices.length; let amount = 0, hint = '';
+      if (d.type === 'bxgy' && d.freeQty > 0) {
+        const g = d.buyQty + d.freeQty, free = Math.floor(n / g) * d.freeQty, need = g - (n % g);
+        amount = prices.slice(0, free).reduce((a, b) => a + b, 0);
+        if (n > 0 && need <= d.freeQty) hint = 'أضيفي ' + (need === 1 ? 'منتجا واحدا آخر' : need + ' منتجات أخرى') + ' واحصلي عليه مجانا: ' + d.title;
+      } else if (d.type === 'percent' && d.percent > 0) {
+        if (n >= d.buyQty) amount = prices.reduce((a, b) => a + b, 0) * d.percent / 100;
+        else if (n > 0 && d.buyQty - n === 1) hint = 'أضيفي منتجا واحدا آخر لتحصلي على خصم ' + num(d.percent) + '%: ' + d.title;
+      }
+      amount = Math.round(amount * 100) / 100;
+      if (amount > best.amount) best = { amount, deal: d, hint: best.hint };
+      if (hint && !best.hint) best.hint = hint;
+    });
+    return best;
+  }
   const sections = {
+    offers() {
+      if (!offers.length && !deals.length) return '';
+      return '<section class="sec" id="offers"><h2>' + esc(S.copy.offersTitle || '') + '</h2><p class="sub">' + esc(S.copy.offersText || '') + '</p>' +
+        (deals.length ? '<div class="dealbar">' + deals.map((d) => '<div class="deal">' + IC.gift + '<div><b>' + esc(d.title) + '</b>' + (d.description ? '<span>' + esc(d.description) + '</span>' : '') + (d.ends ? '<span class="until">حتى <span class="ltr">' + esc(d.ends) + '</span></span>' : '') + '</div></div>').join('') + '</div>' : '') +
+        '<div class="offers">' + offers.map((o) => {
+        const save = priced(o) && o.compareAt > o.price ? o.compareAt - o.price : 0;
+        return '<article class="ofc' + (o.available ? '' : ' out') + '"><div class="field" style="--c:' + esc(o.bg) + '">' + (save ? '<span class="save">وفري ' + money(save) + '</span>' : '') + (o.img ? '<img loading="lazy" decoding="async" src="' + esc(o.img) + '" alt="' + esc(o.title) + '">' : IC.gift) + '</div>' +
+          '<div class="body"><h3>' + esc(o.title) + '</h3>' + (o.description ? '<p>' + esc(o.description) + '</p>' : '') + (o.includes && o.includes.length ? '<ul class="bens">' + o.includes.map((x) => '<li>' + IC.check + '<span>' + esc(x) + '</span></li>').join('') + '</ul>' : '') +
+          (o.ends ? '<p class="until">العرض حتى <span class="ltr">' + esc(o.ends) + '</span></p>' : '') +
+          '<div class="foot"><span>' + priceHTML(o) + '</span><span data-ctl="' + o.id + '">' + ctl(o, 0) + '</span></div></div></article>';
+      }).join('') + '</div></section>';
+    },
     hero() {
       if (!hasHero) return '';
       const p = featured[0], h = heroInfo(p);
@@ -164,10 +202,11 @@ export function createStore(S, dict) {
     const payOf = () => byId(pays, cart.payment);
     function totals() {
       const sub = cart.items.reduce((a, i) => a + prod(i.id).price * i.qty, 0), c = cart.coupon;
+      const dl = dealFor(cart.items), after = sub - dl.amount;
       let discount = 0, short = 0;
-      if (c) { if (c.min && sub < c.min) short = c.min - sub; else discount = Math.round((c.type === 'percent' ? sub * c.value / 100 : Math.min(c.value, sub)) * 100) / 100; }
+      if (c) { if (c.min && sub < c.min) short = c.min - sub; else discount = Math.round((c.type === 'percent' ? after * c.value / 100 : Math.min(c.value, after)) * 100) / 100; }
       const reg = byId(regions, cart.region), fee = reg ? reg.fee : null;
-      return { sub, c, discount, short, reg, fee, total: Math.max(0, sub - discount) + (fee || 0) };
+      return { sub, c, discount, short, reg, fee, deal: dl.deal, dealOff: dl.amount, dealHint: dl.hint, total: Math.max(0, after - discount) + (fee || 0) };
     }
 
     let toastT;
@@ -267,6 +306,7 @@ export function createStore(S, dict) {
     let step = 1, errs = {}, busy = false;
     function sumHTML(tt) {
       return '<div class="sum"><div><span>' + t('cart.subtotal') + '</span>' + money(tt.sub) + '</div>' +
+        (tt.dealOff ? '<div class="disc"><span>عرض: ' + esc(tt.deal.title) + '</span><span class="ltr">-' + money(tt.dealOff) + '</span></div>' : '') +
         (tt.discount ? '<div class="disc"><span>' + t('cart.discount') + ' <span class="ltr">' + esc(tt.c.code) + '</span></span><span class="ltr">-' + money(tt.discount) + '</span></div>' : '') +
         '<div><span>' + t('cart.delivery') + (tt.reg ? ' - ' + esc(tt.reg.name) : '') + '</span>' + (!regions.length ? '<span class="mut">' + t('cart.deliveryLater') + '</span>' : tt.fee == null ? '<span class="mut">' + t('cart.pickRegion') + '</span>' : tt.fee ? money(tt.fee) : '<span>مجانا</span>') + '</div>' +
         '<div class="tot"><span>' + (tt.fee == null ? 'المجموع قبل التوصيل' : t('cart.total')) + '</span>' + money(tt.total) + '</div></div>';
@@ -275,8 +315,9 @@ export function createStore(S, dict) {
     function message(tt) {
       const c = cart.customer, L = [];
       L.push('*طلب جديد - ' + set.storeName + '*', '', '*الزبونة*', 'الاسم: ' + c.name, 'الهاتف: ' + phoneFmt(c.phone), '', '*المنتجات*');
-      cart.items.forEach((i, k) => { const p = prod(i.id); L.push((k + 1) + '. ' + p.nameAr + ' - ' + fullName(p) + ' ' + p.size, '   الكمية ' + i.qty + ' × ' + plain(p.price) + ' = ' + plain(p.price * i.qty)); });
+      cart.items.forEach((i, k) => { const p = prod(i.id); L.push((k + 1) + '. ' + lineName(p), '   الكمية ' + i.qty + ' × ' + plain(p.price) + ' = ' + plain(p.price * i.qty)); });
       L.push('', '*الحساب*', 'مجموع المنتجات: ' + plain(tt.sub));
+      if (tt.dealOff) L.push('عرض (' + tt.deal.title + '): -' + plain(tt.dealOff));
       if (tt.discount) L.push('كوبون ' + tt.c.code + ': -' + plain(tt.discount));
       L.push(tt.reg ? 'التوصيل (' + tt.reg.name + '): ' + (tt.fee ? plain(tt.fee) : 'مجانا') : 'التوصيل: يحدد عند التأكيد');
       L.push('*' + (tt.reg ? 'المجموع النهائي: ' : 'المجموع قبل التوصيل: ') + plain(tt.total) + '*', '', '*التوصيل*');
@@ -298,9 +339,10 @@ export function createStore(S, dict) {
       if (!cart.items.length) {
         body = '<div class="empty" style="padding-top:70px">' + IC.bag.replace('<svg', '<svg style="width:54px;height:54px;opacity:.35"') + '<p style="margin:14px 0 20px">' + t('cart.empty') + '</p><button class="btn dark" data-close>' + t('cart.browse') + '</button></div>';
       } else if (step === 1) {
-        body = cart.items.map((i) => { const p = prod(i.id); return '<div class="line"><div class="ph" style="--c:' + esc(p.bg) + '"><img src="' + esc(p.thumb || p.img) + '" alt=""></div><div><h4 class="ltr">' + esc(p.name) + '</h4><div class="each">' + esc(p.nameAr) + ' - ' + money(p.price) + ' للقطعة</div><div class="ctl"><span class="stepper"><button data-dec="' + p.id + '" aria-label="إنقاص الكمية">' + IC.minus + '</button><b>' + i.qty + '</b><button data-inc="' + p.id + '" aria-label="زيادة الكمية">' + IC.plus + '</button></span><button class="rm" data-rm="' + p.id + '" aria-label="إزالة ' + esc(p.name) + '">' + IC.trash + '</button></div></div><div class="lt">' + money(p.price * i.qty) + '</div></div>'; }).join('') +
+        body = cart.items.map((i) => { const p = prod(i.id); return '<div class="line"><div class="ph" style="--c:' + esc(p.bg) + '"><img src="' + esc(p.thumb || p.img) + '" alt=""></div><div><h4' + (p.isOffer ? '' : ' class="ltr"') + '>' + esc(p.name) + '</h4><div class="each">' + (p.isOffer ? 'باقة - ' : esc(p.nameAr) + ' - ') + money(p.price) + ' للقطعة</div><div class="ctl"><span class="stepper"><button data-dec="' + p.id + '" aria-label="إنقاص الكمية">' + IC.minus + '</button><b>' + i.qty + '</b><button data-inc="' + p.id + '" aria-label="زيادة الكمية">' + IC.plus + '</button></span><button class="rm" data-rm="' + p.id + '" aria-label="إزالة ' + esc(p.name) + '">' + IC.trash + '</button></div></div><div class="lt">' + money(p.price * i.qty) + '</div></div>'; }).join('') +
           '<form class="coupon" id="cform"><input id="cin" aria-label="' + t('cart.coupon') + '" placeholder="' + t('cart.coupon') + '" value="' + esc(tt.c ? tt.c.code : '') + '" autocomplete="off" autocapitalize="characters"><button class="btn dark"' + (busy ? ' disabled' : '') + '>' + t('cart.apply') + '</button></form>' +
           (tt.c ? '<div class="cmsg ' + (tt.short ? 'no' : 'ok') + '" role="status">' + (tt.short ? '' : IC.check) + '<span>' + (tt.short ? 'هذا الكوبون للطلبات من ' + plain(tt.c.min) + ' وما فوق. ينقصك ' + plain(tt.short) + '.' : 'تم تطبيق ' + esc(tt.c.code) + (tt.c.type === 'percent' ? ' (خصم ' + num(tt.c.value) + '%)' : ' (خصم ' + plain(tt.c.value) + ')')) + '</span><button class="clear" data-couponx>' + t('cart.remove') + '</button></div>' : cart.couponMsg ? '<div class="cmsg no" role="status"><span>' + esc(cart.couponMsg) + '</span></div>' : '');
+        if (tt.dealHint) body += '<p class="notice info" style="margin-top:14px">' + esc(tt.dealHint) + '</p>';
         const lack = minOrder - tt.sub;
         foot = sumHTML(tt) + (!wa ? '<p class="notice info">' + t('order.soon') + '</p>' : lack > 0 ? '<p class="notice" role="status">الحد الأدنى للطلب ' + money(minOrder) + '. أضيفي منتجات بقيمة ' + money(lack) + ' لإكمال الطلب.</p><button class="btn block" disabled>' + t('cart.next') + '</button>' : '<button class="btn block" data-step="2">' + t('cart.next') + '</button>');
       } else if (step === 2) {
@@ -444,7 +486,7 @@ export function createStore(S, dict) {
     on(host, 'click', (e) => {
       const el = e.target.closest('[data-add],[data-inc],[data-dec],[data-rm],[data-open],[data-close],[data-step],[data-fhair],[data-fneed],[data-hero],[data-pdq],[data-pdadd],[data-couponx],[data-rate],[data-shot],[data-rmphoto],#copymsg,#donecart,#wago,a[href="#top"]');
       if (!el) return; const d = el.dataset;
-      if ('add' in d) return setQty(d.add, qtyOf(d.add) + 1, el.closest('.pc') ? $('.field img', el.closest('.pc')) : el);
+      if ('add' in d) { const card = el.closest('.pc,.ofc'); return setQty(d.add, qtyOf(d.add) + 1, card ? $('.field img', card) || $('.field', card) : el); }
       if ('inc' in d) return setQty(d.inc, qtyOf(d.inc) + 1, el);
       if ('dec' in d) return setQty(d.dec, qtyOf(d.dec) - 1);
       if ('rm' in d) return setQty(d.rm, 0);
@@ -462,7 +504,7 @@ export function createStore(S, dict) {
       if ('rmphoto' in d) { rphotos.splice(+d.rmphoto, 1); return drawThumbs(); }
       if (el.id === 'wago') { timers.push(setTimeout(() => { step = 4; renderCart(); }, 400)); return; }
       if (el.id === 'copymsg') { const m = message(totals()); (navigator.clipboard ? navigator.clipboard.writeText(m) : Promise.reject()).then(() => toast('تم نسخ نص الطلب'), () => toast('تعذر النسخ. انسخي النص من المعاينة.')); return; }
-      if (el.id === 'donecart') { cart.items = []; cart.coupon = null; persist(); close(); renderGrid(); refreshBadges(); if (hasHero) heroBtn(); return toast('تم إفراغ السلة'); }
+      if (el.id === 'donecart') { cart.items = []; cart.coupon = null; persist(); close(); renderGrid(); syncOffers(); refreshBadges(); if (hasHero) heroBtn(); return toast('تم إفراغ السلة'); }
       if (el.matches('a[href="#top"]')) { e.preventDefault(); scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' }); }
     });
     on(document, 'keydown', (e) => {
@@ -481,7 +523,8 @@ export function createStore(S, dict) {
       persist(); const sc = $('#cbody').scrollTop; renderCart(); $('#cbody').scrollTop = sc;
     });
 
-    if (cart.items.length) renderGrid();
+    const syncOffers = () => offers.forEach((o) => $$('[data-ctl="' + o.id + '"]').forEach((el) => { el.innerHTML = ctl(o, qtyOf(o.id)); }));
+    if (cart.items.length) { renderGrid(); syncOffers(); }
     if (mine.length) renderReviews();
     refreshBadges();
     if (cart.coupon) api.checkCoupon(cart.coupon.code).then((r) => { if (!r || r.status !== 'ok') { cart.coupon = null; persist(); } }).catch(() => {});

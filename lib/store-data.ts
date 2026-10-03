@@ -20,6 +20,8 @@ export const COLLECTIONS: Record<string, string> = {
   sections: "sections",
   socials: "socials",
   nav: "nav_links",
+  packages: "packages",
+  deals: "deals",
 };
 
 const camel = (k: string) => k.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
@@ -59,6 +61,11 @@ export async function getStore(): Promise<StoreState> {
     .filter((p: Row) => p.visible)
     .map(({ sourceNote: _note, createdAt: _at, ...p }: Row) => ({ ...p, price: p.price == null ? null : Number(p.price), compareAt: p.compareAt == null ? 0 : Number(p.compareAt) }));
   for (const key of ["regions", "hairTypes"]) state[key] = state[key].map((r: Row) => ({ ...r, fee: r.fee == null ? undefined : Number(r.fee), km: r.km == null ? undefined : Number(r.km), curl: r.curl == null ? undefined : Number(r.curl) }));
+  const today = new Date().toISOString().slice(0, 10);
+  state.packages = state.packages
+    .filter((o: Row) => o.visible && (!o.ends || o.ends >= today))
+    .map(({ createdAt: _at, ...o }: Row) => ({ ...o, price: o.price == null ? null : Number(o.price), compareAt: o.compareAt == null ? 0 : Number(o.compareAt) }));
+  state.deals = state.deals.filter((d: Row) => d.active && (!d.ends || d.ends >= today)).map((d: Row) => ({ ...d, percent: Number(d.percent) }));
   state.reviews = (reviews.data ?? []).map((r) => ({ id: r.id, name: r.name, product: r.product, rating: r.rating, text: r.text, photos: r.photos ?? [], date: String(r.created_at).slice(0, 10) }));
   return state;
 }
